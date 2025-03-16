@@ -25,7 +25,8 @@
     "react-native-screens": "~4.4.0",
     "react-native-web": "~0.19.13",
     "tailwindcss": "^3.4.17",
-    "tamagui": "^1.125.26"
+    "tamagui": "^1.125.26",
+    "expo-image-picker": "~16.0.6"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
