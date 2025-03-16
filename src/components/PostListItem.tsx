@@ -1,10 +1,9 @@
 import { Image, Text, XStack, YStack } from "tamagui";
 import posts from "~/assets/data/posts.json";
 import Feather from '@expo/vector-icons/Feather';
+import { _GAP } from "../settings";
 
 type PostData = (typeof posts)[0];
-
-const _GAP = 12;
 
 export default function PostListItem({ post }: { post: PostData }) {
   return (
