@@ -1,29 +1,12 @@
 import { widths } from "@tamagui/config";
 import { useEffect, useState } from "react";
 import { Button, Image, Text, TextArea, View, YStack } from "tamagui";
+import ImagePicker from "~/src/components/ImagePicker";
 import { _BR, _GAP, _MAX_W } from "~/src/settings";
-import * as ImagePicker from "expo-image-picker";
 
 export default function CreatePost() {
     const [caption, setCaption] = useState("");
     const [image, setImage] = useState<string>();
-
-    useEffect(() => {
-        if (!image) pickImage();
-    }, [image]);
-
-    const pickImage = async () => {
-        let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ["images"],
-            allowsEditing: true,
-            aspect: [1, 1],
-            quality: 1,
-        });
-
-        if (!result.canceled) {
-            setImage(result.assets[0].uri);
-        }
-    };
 
     return (
         <YStack
@@ -43,7 +26,9 @@ export default function CreatePost() {
                 borderRadius={_BR}
                 backgroundColor={"lightpink"}
             ></Image>
-            <Button onPress={pickImage}>Change</Button>
+            <ImagePicker onImageChange={(newImage) => setImage(newImage)}>
+                Change
+            </ImagePicker>
 
             {/* Caption input */}
             <TextArea
@@ -52,10 +37,7 @@ export default function CreatePost() {
             ></TextArea>
 
             {/* Post button */}
-            {
-                image &&
-                <Button theme={"accent"}>Share post</Button>
-            }
+            {image && <Button theme={"accent"}>Share post</Button>}
         </YStack>
     );
 }
