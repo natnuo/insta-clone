@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { Image, Input, Label, XStack, YStack } from "tamagui";
+import { useCallback, useState } from "react";
+import { Keyboard, TouchableWithoutFeedback } from "react-native";
+import { Button, Image, Input, Label, XStack, YStack } from "tamagui";
 import ImagePicker from "~/src/components/ImagePicker";
 import { _GAP, _MAX_W } from "~/src/settings";
 
@@ -10,41 +11,53 @@ export default function ProfileScreen() {
 
     const [username, setUsername] = useState<string>();
 
+    const saveSettings = useCallback(() => {
+
+    }, []);
+
+    const signOut = useCallback(() => {
+
+    }, []);
+
     return (
-        <YStack
-            maxWidth={_MAX_W}
-            alignItems="center"
-            gap={_GAP}
-            padding={_GAP}
-            width={"100%"}
-        >
-            {/* Avatar picker */}
-            <Image
-                source={{
-                    uri: image,
-                }}
-                width={200}
-                aspectRatio={1}
-                borderRadius={Number.MAX_SAFE_INTEGER}
-                backgroundColor={"lightpink"}
-            ></Image>
-            <ImagePicker
-                onImageChange={(newImage) => setImage(newImage)}
-                buttonProps={{ width: "100%" }}
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <YStack
+                maxWidth={_MAX_W}
+                alignItems="center"
+                gap={_GAP}
+                padding={_GAP}
+                width={"100%"}
             >
-                Change
-            </ImagePicker>
+                {/* Avatar picker */}
+                <Image
+                    source={{
+                        uri: image,
+                    }}
+                    width={200}
+                    aspectRatio={1}
+                    borderRadius={Number.MAX_SAFE_INTEGER}
+                    backgroundColor={"lightpink"}
+                ></Image>
+                <ImagePicker
+                    onImageChange={(newImage) => setImage(newImage)}
+                    buttonProps={{ width: "100%" }}
+                >
+                    Change
+                </ImagePicker>
 
-            {/* Field inputs */}
-            <StringInputField
-                name="Username"
-                idroot="username"
-                currVal={username}
-                onInput={setUsername}
-            ></StringInputField>
+                {/* Field inputs */}
+                <StringInputField
+                    name="Username"
+                    idroot="username"
+                    currVal={username}
+                    onInput={setUsername}
+                ></StringInputField>
 
-            {/* Save button */}
-        </YStack>
+                {/* Save button */}
+                <Button onPress={saveSettings} width={"100%"}>Update Profile</Button>
+                <Button onPress={signOut} width={"100%"} theme="accent">Sign Out</Button>
+            </YStack>
+        </TouchableWithoutFeedback>
     );
 }
 
