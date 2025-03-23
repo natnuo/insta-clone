@@ -2,6 +2,8 @@ import { useCallback, useState } from "react";
 import { Keyboard, TouchableWithoutFeedback } from "react-native";
 import { Button, Image, Input, Label, XStack, YStack } from "tamagui";
 import ImagePicker from "~/src/components/ImagePicker";
+import StringInputField from "~/src/components/StringInputField";
+import { supabase } from "~/src/lib/supabase";
 import { _GAP, _MAX_W } from "~/src/settings";
 
 // TODO: set default username & related to curr/prev value
@@ -16,7 +18,7 @@ export default function ProfileScreen() {
     }, []);
 
     const signOut = useCallback(() => {
-
+        supabase.auth.signOut();
     }, []);
 
     return (
@@ -61,28 +63,3 @@ export default function ProfileScreen() {
     );
 }
 
-function StringInputField({
-    name,
-    idroot,
-    currVal,
-    onInput,
-}: {
-    name: string;
-    idroot: string;
-    currVal: string | undefined;
-    onInput: (newVal: string) => void;
-}) {
-    return (
-        <XStack gap={_GAP} alignItems="center" display={"flex"}>
-            <Label htmlFor={`${idroot}-inp`} width={"40%"}>
-                {name}
-            </Label>
-            <Input
-                id={`${idroot}-inp`}
-                value={currVal}
-                onChangeText={onInput}
-                flex={1}
-            ></Input>
-        </XStack>
-    );
-}

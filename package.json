@@ -9,6 +9,9 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@react-native-async-storage/async-storage": "1.23.1",
+    "@rneui/themed": "^4.0.0-rc.8",
+    "@supabase/supabase-js": "^2.49.1",
     "@tamagui/config": "^1.125.26",
     "@tamagui/core": "^1.125.26",
     "cloudinary-react-native": "^1.0.1",
