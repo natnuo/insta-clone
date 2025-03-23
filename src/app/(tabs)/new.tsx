@@ -1,17 +1,45 @@
 import { widths } from "@tamagui/config";
+import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { Keyboard, TouchableWithoutFeedback } from "react-native";
-import { Button, Image, Text, TextArea, View, YStack } from "tamagui";
+import {
+    Button,
+    Image,
+    Text,
+    TextArea,
+    useAdaptContext,
+    View,
+    YStack,
+} from "tamagui";
 import ImagePicker from "~/src/components/ImagePicker";
 import { uploadImage } from "~/src/lib/cloudinary";
+import { supabase } from "~/src/lib/supabase";
+import { useAuth } from "~/src/providers/AuthProvider";
 import { _BR, _GAP, _MAX_W } from "~/src/settings";
 
 export default function CreatePost() {
     const [caption, setCaption] = useState("");
     const [image, setImage] = useState<string>();
 
+    const { session } = useAuth();
+
     const createPost = useCallback(async () => {
         const response = await uploadImage(image);
+
+        const { data, error } = await supabase
+            .from("posts")
+            .insert([
+                {
+                    caption,
+                    image: response?.public_id,
+                    user_id: session?.user.id,
+                },
+            ])
+            .select();
+        
+        console.log(data, error);
+        
+        router.push("/(tabs)");
     }, [image]);
 
     return (
@@ -40,11 +68,16 @@ export default function CreatePost() {
                 {/* Caption input */}
                 <TextArea
                     placeholder="Write about your image ✏️"
+                    value={caption}
                     onChangeText={(v) => setCaption(v)}
                 ></TextArea>
 
                 {/* Post button */}
-                {image && <Button theme={"accent"} onPress={createPost}>Share post</Button>}
+                {image && (
+                    <Button theme={"accent"} onPress={createPost}>
+                        Share post
+                    </Button>
+                )}
             </YStack>
         </TouchableWithoutFeedback>
     );

@@ -1,9 +1,27 @@
-import { FlatList } from "react-native";
-import posts from "~/assets/data/posts.json";
+import { useCallback, useEffect, useState } from "react";
+import { Alert, FlatList } from "react-native";
 import PostListItem from "~/src/components/PostListItem";
+import { supabase } from "~/src/lib/supabase";
 import { _GAP, _MAX_W } from "~/src/settings";
 
 export default function ForYouScreen() {
+    const [posts, setPosts] = useState<any[]>([]);
+
+    useEffect(() => {
+        fetchPosts();
+    }, []);
+
+    const fetchPosts = useCallback(async () => {
+        let { data, error } = await supabase
+            .from("posts")
+            .select("*, user:profiles(*)");  // selects data referenced from profiles as user
+        if (error || !data) {
+            Alert.alert("Something went wrong.", error?.message);
+            return;
+        }
+        setPosts(data);
+    }, []);
+
     return (
         <FlatList
             data={posts}
