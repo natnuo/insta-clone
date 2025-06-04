@@ -120,13 +120,14 @@ export default function ProfileScreen() {
               }}
               width={200}
               aspectRatio={1}
+              backgroundColor={"black"}
               borderRadius={Number.MAX_SAFE_INTEGER}
             ></Image>
           ) : (
             <AdvancedImage
               cldImg={cldImage}
               width={200}
-              style={{ aspectRatio: 1 }}
+              style={{ aspectRatio: 1, backgroundColor: "black" }}
               borderRadius={Number.MAX_SAFE_INTEGER}
             ></AdvancedImage>
           )}

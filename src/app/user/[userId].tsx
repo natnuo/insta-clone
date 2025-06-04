@@ -1,0 +1,110 @@
+import { Redirect, useLocalSearchParams } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
+import { Alert, useWindowDimensions } from "react-native";
+import { FlatList, GestureHandlerRootView } from "react-native-gesture-handler";
+import { Button, Text, View, XStack, YStack } from "tamagui";
+import PostSquare from "~/src/components/PostSquare";
+import { cld } from "~/src/lib/cloudinary";
+import { supabase } from "~/src/lib/supabase";
+import { PostData, UserDataSimple } from "~/src/lib/types";
+import { useAuth } from "~/src/providers/AuthProvider";
+import { thumbnail } from "@cloudinary/url-gen/actions/resize";
+import { FocusOn } from "@cloudinary/transformation-builder-sdk/qualifiers/focusOn";
+import { focusOn } from "@cloudinary/transformation-builder-sdk/qualifiers/gravity";
+import { AdvancedImage } from "cloudinary-react-native";
+import { CloudinaryImage } from "@cloudinary/url-gen/index";
+
+export default function UserScreen() {
+  const { userId } = useLocalSearchParams();
+  const [loading, setLoading] = useState(false);
+  const [posts, setPosts] = useState<PostData[]>();
+
+  const { width, height } = useWindowDimensions();
+
+  const [postAvatar, setPostAvatar] = useState<CloudinaryImage>();
+
+  const [user, setUser] = useState<UserDataSimple>();
+
+  const fetchAvatar = useCallback(async () => {
+    try {
+      const {data, error} = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .single();
+      
+      if (error || !data) {
+        Alert.alert("Something unexpected happened.");
+        throw error;
+      }
+      
+      const AVATAR_W = 96;
+      const postAvatarTemp = cld.image(data.avatar_url);
+      postAvatarTemp.resize(
+        thumbnail()
+          .width(AVATAR_W)
+          .height(AVATAR_W)
+          .gravity(focusOn(FocusOn.face()))
+      );
+      setPostAvatar(postAvatarTemp);
+
+      setUser(data);
+    } finally {
+
+    }
+  }, []);
+
+  const fetchPosts = useCallback(async () => {
+    try {
+      setLoading(true);
+      
+      const { data, error } = await supabase
+        .from("posts")
+        .select("*, user:profiles(*)")
+        .eq("user_id", userId);
+      
+      if (error || !data) {
+        Alert.alert(error.message);
+        throw error;
+      }
+
+      setPosts(data);
+    } finally {
+      setLoading(false);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    fetchPosts();
+    fetchAvatar();
+  }, []);
+
+  // TODO: PAGINATION HERE
+  // TODO: REFRESH
+  return (<GestureHandlerRootView>
+    <YStack paddingVertical={50}>
+      <XStack padding={25} gap={10} marginBlock={20}>
+        {
+          postAvatar
+          && (<AdvancedImage
+            cldImg={postAvatar}
+            width={96}
+            style={{ aspectRatio: 1, backgroundColor: "black" }}
+            borderRadius={Number.MAX_SAFE_INTEGER}
+          ></AdvancedImage>)
+        }
+        <YStack gap={2}>
+          <Text fontWeight={"bold"} fontSize={24}>{user?.username}</Text>
+          <Text fontSize={16}>{user?.description}</Text>
+        </YStack>
+      </XStack>
+
+      <FlatList
+        data={posts}
+        numColumns={3}
+        keyExtractor={(post) => post.id}
+        renderItem={({ item }) => <PostSquare post={item} sideLength={width / 3}></PostSquare>}
+      ></FlatList>
+    </YStack>
+  </GestureHandlerRootView>);
+}

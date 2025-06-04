@@ -27,6 +27,7 @@ import { supabase } from "../lib/supabase";
 import { useAuth } from "../providers/AuthProvider";
 import { CommentData, PostData } from "../lib/types";
 import Comment from "./Comment";
+import { Link } from "expo-router";
 
 const COMMENT_PAGINATION_LENGTH = 13;
 
@@ -176,7 +177,10 @@ export default function PostListItem({ post }: { post: PostData }) {
           borderRadius={Number.MAX_SAFE_INTEGER}
           style={{ aspectRatio: 1 }}
         ></AdvancedImage>
-        <Text>{post.user.username}</Text>
+        <Link href={{
+          pathname: '/user/[userId]',
+          params: { userId: post.user.id },
+        }}>{post.user.username}</Link>
       </XStack>
 
       {/* Image */}
@@ -184,6 +188,14 @@ export default function PostListItem({ post }: { post: PostData }) {
         cldImg={image}
         style={{ aspectRatio: 1, width: "100%" }}
       ></AdvancedImage>
+
+      {/* Caption */}
+      <Text
+        marginHorizontal={8} marginVertical={4}
+      >
+        <Text fontWeight={"bold"}>{post.user.username}</Text>{" "}
+        {post.caption}
+      </Text>
 
       {/* Reactions */}
       <XStack gap={_GAP} padding={_GAP}>
@@ -193,7 +205,6 @@ export default function PostListItem({ post }: { post: PostData }) {
           <Entypo name="heart-outlined" size={24} onPress={like} />
         )}
         <Feather name="message-circle" size={24} onPress={openComments} />
-        <Feather name="send" size={24} />
 
         <Feather name="bookmark" size={24} className="ml-auto" />
       </XStack>

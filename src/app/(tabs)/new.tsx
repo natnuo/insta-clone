@@ -42,10 +42,10 @@ export default function CreatePost() {
       ])
       .select();
 
-    console.log(data, error);
-
     router.push("/(tabs)");
-  }, [image]);
+
+    setCaption("");
+  }, [image, caption]);
 
   return (
     <KeyboardAvoidingView
@@ -57,8 +57,10 @@ export default function CreatePost() {
           maxWidth={_MAX_W}
           alignSelf="center"
           gap={_GAP}
+          display="flex"
           padding={_GAP}
           width={"100%"}
+          height={"100%"}
         >
           {/* Image picker */}
           <Image
@@ -68,16 +70,18 @@ export default function CreatePost() {
             width="100%"
             aspectRatio={1}
             borderRadius={_BR}
-            backgroundColor={"lightpink"}
+            backgroundColor={"black"}
           ></Image>
-          <ImagePicker onImageChange={(newImage) => setImage(newImage)}>
+          <ImagePicker autoAsk onImageChange={(newImage) => setImage(newImage)}>
             Change
           </ImagePicker>
 
           {/* Caption input */}
           <TextArea
-            placeholder="Write about your image ✏️"
+            placeholder="Write about your image"
             value={caption}
+            flexGrow={1}
+            borderWidth={0}
             onChangeText={(v) => setCaption(v)}
           ></TextArea>
 

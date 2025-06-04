@@ -1,3 +1,4 @@
+import { Session } from "@supabase/supabase-js";
 import React, { useState } from "react";
 import { Alert, StyleSheet, View, AppState } from "react-native";
 import { Button } from "tamagui";
@@ -20,17 +21,34 @@ export default function Auth() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
+    const [username, setUsername] = useState("");
 
-    async function signInWithEmail() {
+    async function signUpWithEmail() {
         setLoading(true);
-        const { error } = await supabase.auth.signInWithPassword({
-            email: email,
-            password: password,
-        });
 
-        if (error) Alert.alert(error.message);
-        setLoading(false);
-    }
+        try {
+            const {
+                data: { session },
+                error,
+            } = await supabase.auth.signUp({
+                email: email,
+                password: password,
+            });
+
+            if (error) {
+                Alert.alert(error.message);
+                throw error;
+            }
+            if (!session) {
+                throw "Session Null";
+            }
+            
+            // if (!session)
+            //     Alert.alert("Please check your inbox for email verification!");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <View style={styles.container}>
@@ -48,6 +66,15 @@ export default function Auth() {
             </View>
             <View style={styles.verticallySpaced}>
                 <StringInputField
+                    name="Username"
+                    idroot="username"
+                    currVal={username}
+                    onInput={setUsername}
+                    inputProps={{ secureTextEntry: false }}
+                ></StringInputField>
+            </View>
+            <View style={styles.verticallySpaced}>
+                <StringInputField
                     name="Password"
                     idroot="password"
                     currVal={password}
@@ -55,9 +82,9 @@ export default function Auth() {
                     inputProps={{ secureTextEntry: true }}
                 ></StringInputField>
             </View>
-            <View style={[styles.verticallySpaced, styles.mt20]}>
-                <Button disabled={loading} onPress={() => signInWithEmail()}>
-                    Sign In
+            <View style={styles.verticallySpaced}>
+                <Button disabled={loading} onPress={() => signUpWithEmail()}>
+                    Sign Up
                 </Button>
             </View>
         </View>

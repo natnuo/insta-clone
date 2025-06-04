@@ -16,4 +16,5 @@ export type UserDataSimple = {
   updated_at: Date;
   username: string;
   avatar_url: string;
+  description: string;
 };

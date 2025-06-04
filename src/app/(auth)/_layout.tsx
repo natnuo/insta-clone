@@ -1,4 +1,4 @@
-import { Redirect, Stack } from "expo-router";
+import { Redirect, Stack, Tabs } from "expo-router";
 import { useAuth } from "~/src/providers/AuthProvider";
 
 export default function AuthLayout() {
@@ -9,11 +9,15 @@ export default function AuthLayout() {
     }
 
     return (
-        <Stack>
-            <Stack.Screen
+        <Tabs>
+            <Tabs.Screen
                 name="index"
-                options={{ headerTitle: "Authentication" }}
-            ></Stack.Screen>
-        </Stack>
+                options={{ title: "Login" }}
+            ></Tabs.Screen>
+            <Tabs.Screen
+                name="sign_up"
+                options={{ title: "Sign Up" }}
+            ></Tabs.Screen>
+        </Tabs>
     );
 }
