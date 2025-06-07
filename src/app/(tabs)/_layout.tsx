@@ -42,6 +42,16 @@ export default function TabsLayout() {
       ></Tabs.Screen>
 
       <Tabs.Screen
+        name="saved"
+        options={{
+          headerTitle: "Library",
+          tabBarIcon: ({ color }) => (
+            <FontAwesome name="bookmark" size={24} color={color} />
+          ),
+        }}
+      ></Tabs.Screen>
+
+      <Tabs.Screen
         name="profile"
         options={{
           headerTitle: "Profile",

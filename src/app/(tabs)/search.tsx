@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Alert, TextInput } from "react-native";
+import { Alert, Keyboard, KeyboardAvoidingView, TextInput, TouchableWithoutFeedback } from "react-native";
 import { FlatList, GestureHandlerRootView } from "react-native-gesture-handler";
 import { View, YStack } from "tamagui";
 import ProfileRow from "~/src/components/ProfileRow";
@@ -40,19 +40,21 @@ export default function SearchScreen() {
 
   return (
     <GestureHandlerRootView>
-      <YStack padding={24} gap={8}>
-        <TextInput
-          value={search}
-          onChangeText={(v) => setSearch(v)}
-          placeholder="Find a user"
-        ></TextInput>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <YStack padding={24} gap={8} height={"100%"}>
+          <TextInput
+            value={search}
+            onChangeText={(v) => setSearch(v)}
+            placeholder="Find a user"
+          ></TextInput>
 
-        <FlatList
-          data={users}
-          keyExtractor={(user) => user.id}
-          renderItem={({ item }) => <ProfileRow user={item}></ProfileRow>}
-        ></FlatList>
-      </YStack>
+          <FlatList
+            data={users}
+            keyExtractor={(user) => user.id}
+            renderItem={({ item }) => <ProfileRow user={item}></ProfileRow>}
+          ></FlatList>
+        </YStack>
+      </TouchableWithoutFeedback>
     </GestureHandlerRootView>
   );
 }

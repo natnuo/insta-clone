@@ -1,4 +1,4 @@
-import { Image, Text, useIsPresent, View, XStack, YStack } from "tamagui";
+import { Button, Image, Text, useIsPresent, View, XStack, YStack } from "tamagui";
 import posts from "~/assets/data/posts.json";
 import Feather from "@expo/vector-icons/Feather";
 import Entypo from "@expo/vector-icons/Entypo";
@@ -19,19 +19,20 @@ import {
   TouchableWithoutFeedback,
   useWindowDimensions,
 } from "react-native";
-import { thumbnail } from "@cloudinary/url-gen/actions/resize";
+import { auto, thumbnail } from "@cloudinary/url-gen/actions/resize";
 import { FocusOn } from "@cloudinary/url-gen/qualifiers/focusOn";
 import { focusOn } from "@cloudinary/transformation-builder-sdk/qualifiers/gravity";
-import { useEffect, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../providers/AuthProvider";
 import { CommentData, PostData } from "../lib/types";
 import Comment from "./Comment";
 import { Link } from "expo-router";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 
 const COMMENT_PAGINATION_LENGTH = 13;
 
-export default function PostListItem({ post }: { post: PostData }) {
+export default function PostListItem({ post, onRefresh }: { post: PostData, onRefresh: () => void }) {
   const { width } = useWindowDimensions();
   const contWidth = Math.min(width, _MAX_W);
 
@@ -48,6 +49,7 @@ export default function PostListItem({ post }: { post: PostData }) {
   );
 
   const { session } = useAuth();
+
   const [uncertainLikeStatus, setUncertainLikeStatus] = useState(true);
   const [liked, setLiked] = useState(false);
   const fetchLiked = async () => {
@@ -68,6 +70,23 @@ export default function PostListItem({ post }: { post: PostData }) {
 
     setUncertainLikeStatus(false);
   };
+  const like = async () => {
+    if (uncertainLikeStatus) return;
+    setUncertainLikeStatus(true);
+
+    const { error } = await supabase.from("likes").insert({
+      user_id: session?.user.id,
+      post_id: post.id,
+    });
+
+    if (error) {
+      Alert.alert("Something went wrong.", error.message);
+      return;
+    }
+
+    setLiked(true);
+    setUncertainLikeStatus(false);
+  };
   const unlike = async () => {
     if (uncertainLikeStatus) return;
     setUncertainLikeStatus(true);
@@ -86,27 +105,84 @@ export default function PostListItem({ post }: { post: PostData }) {
     setLiked(false);
     setUncertainLikeStatus(false);
   };
-  const like = async () => {
-    if (uncertainLikeStatus) return;
-    setUncertainLikeStatus(true);
 
-    const { error } = await supabase.from("likes").insert({
-      user_id: session?.user.id,
-      post_id: post.id,
-    });
+  const [loadingSaved, setLoadingSaved] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const fetchSaved = async () => {
+    if (loadingSaved) return;
 
-    if (error) {
-      Alert.alert("Something went wrong.", error.message);
-      return;
+    try {
+      setLoadingSaved(true);
+
+      const { count, error } = await supabase
+        .from("post_saves")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", session?.user.id)
+        .eq("post_id", post.id);
+
+      if (error || count === null) {
+        Alert.alert("Something unexpected happened");
+        throw error;
+      }
+
+      if (count > 0) {
+        setSaved(true);
+      }
+    } finally {
+      setLoadingSaved(false);
     }
+  };
+  const savePost = async () => {
+    if (loadingSaved) return;
+    
+    try {
+      setLoadingSaved(true);
 
-    setLiked(true);
-    setUncertainLikeStatus(false);
+      const { error } = await supabase.from("post_saves").insert({
+        user_id: session?.user.id,
+        post_id: post.id,
+      });
+
+      if (error) {
+        Alert.alert("Something unexpected happened");
+        throw error;
+      }
+
+      setSaved(true);
+    } finally {
+      setLoadingSaved(false);
+    }
+  };
+  const unsavePost = async () => {
+    if (loadingSaved) return;
+    
+    try {
+      setLoadingSaved(true);
+
+      const { error } = await supabase
+        .from("post_saves")
+        .delete()
+        .eq("user_id", session?.user.id)
+        .eq("post_id", post.id);
+
+      if (error) {
+        Alert.alert("Something unexpected happened");
+        throw error;
+      }
+
+      setSaved(false);
+    } finally {
+      setLoadingSaved(false);
+    }
   };
 
-  const [comments, addLoadedComments] = useReducer(
-    (state: CommentData[], newComments: CommentData[]) => {
-      state.push(...newComments);
+  const [comments, updateLoadedComments] = useReducer(
+    (state: CommentData[], [action, aComments]: ["add" | "set", CommentData[]]) => {
+      if (action === "add") {
+        state.push(...aComments);
+      } else {
+        state = aComments;
+      }
       return state;
     },
     []
@@ -141,7 +217,7 @@ export default function PostListItem({ post }: { post: PostData }) {
       setAllCommentsLoaded(true);
     }
 
-    addLoadedComments(data);
+    updateLoadedComments(["add", data]);
 
     setUncertainCommentsStatus(false);
   };
@@ -160,12 +236,47 @@ export default function PostListItem({ post }: { post: PostData }) {
       return;
     }
 
+    updateLoadedComments(["set", []]);
+
     setCommentInput("");
   };
 
   useEffect(() => {
+    if (commentsVisible && comments.length === 0) loadMoreComments();
+  }, [commentsVisible, comments]);
+
+  useEffect(() => {
     fetchLiked();
+    fetchSaved();
   }, []);
+
+  const [confirmDeleteVisible, setConfirmDeleteVisible] = useState(false);
+
+  const [loadingDeletePost, setLoadingDeletePost] = useState(false);
+  const deletePost = useCallback(async () => {
+    if (loadingDeletePost) return;
+
+    try {
+      setLoadingDeletePost(true);
+
+      const {error} = await supabase
+        .from("posts")
+        .delete()
+        .eq("id", post.id);
+      
+        console.log(error, post.id);
+      
+      if (error) {
+        Alert.alert("Something unexpected happened");
+        throw error;
+      }
+
+      setConfirmDeleteVisible(false);
+      onRefresh();
+    } finally {
+      setLoadingDeletePost(false);
+    }
+  }, [loadingDeletePost, post]);
 
   return (
     <YStack backgroundColor={"white"}>
@@ -175,26 +286,27 @@ export default function PostListItem({ post }: { post: PostData }) {
           cldImg={postAvatar}
           width={AVATAR_W}
           borderRadius={Number.MAX_SAFE_INTEGER}
-          style={{ aspectRatio: 1 }}
+          style={{ aspectRatio: 1, backgroundColor: "black" }}
         ></AdvancedImage>
-        <Link href={{
-          pathname: '/user/[userId]',
-          params: { userId: post.user.id },
-        }}>{post.user.username}</Link>
+        <Link
+          href={{
+            pathname: "/user/[userId]",
+            params: { userId: post.user.id },
+          }}
+        >
+          {post.user.username}
+        </Link>
       </XStack>
 
       {/* Image */}
       <AdvancedImage
         cldImg={image}
-        style={{ aspectRatio: 1, width: "100%" }}
+        style={{ aspectRatio: 1, width: "100%", backgroundColor: "black" }}
       ></AdvancedImage>
 
       {/* Caption */}
-      <Text
-        marginHorizontal={8} marginVertical={4}
-      >
-        <Text fontWeight={"bold"}>{post.user.username}</Text>{" "}
-        {post.caption}
+      <Text marginHorizontal={8} marginVertical={4}>
+        <Text fontWeight={"bold"}>{post.user.username}</Text> {post.caption}
       </Text>
 
       {/* Reactions */}
@@ -206,9 +318,70 @@ export default function PostListItem({ post }: { post: PostData }) {
         )}
         <Feather name="message-circle" size={24} onPress={openComments} />
 
-        <Feather name="bookmark" size={24} className="ml-auto" />
+        <FontAwesome
+          name="trash-o"
+          size={24}
+          className="ml-auto mr-1"
+          onPress={() => setConfirmDeleteVisible(true)}
+        />
+
+        {saved ? (
+          <FontAwesome
+            name="bookmark"
+            size={24}
+            onPress={unsavePost}
+          />
+        ) : (
+          <FontAwesome
+            name="bookmark-o"
+            size={24}
+            onPress={savePost}
+          />
+        )}
       </XStack>
 
+      {/* DELETE MODAL */}
+      <Modal
+        animationType="fade"
+        transparent={false}
+        presentationStyle="formSheet"
+        visible={confirmDeleteVisible}
+        onRequestClose={() => setConfirmDeleteVisible(false)}
+      >
+        <YStack
+          padding={24}
+          gap={12}
+          flex={1}
+          alignContent="center"
+          justifyContent="center"
+        >
+          <Text>Posted by {post.user.username} at {(new Date(post.created_at)).toLocaleString()}</Text>
+          <AdvancedImage
+            cldImg={image}
+            style={{ aspectRatio: 1, width: "100%", backgroundColor: "black" }}
+          ></AdvancedImage>
+          
+          <Text>
+            Are you sure you want to delete this post?
+            <Text fontStyle="italic">This action is irreversible.</Text>
+          </Text>
+
+          <XStack display="flex" gap={12}>
+            <Button
+              flexGrow={1}
+              onPress={() => setConfirmDeleteVisible(false)}
+            >Cancel</Button>
+
+            <Button
+              theme={"accent"}
+              flexGrow={1}
+              onPress={deletePost}
+            >Delete</Button>
+          </XStack>
+        </YStack>
+      </Modal>
+
+      {/* COMMENTS MODAL */}
       {/* <View position="absolute" width={screenWidth} height={screenHeight}> */}
       <Modal
         animationType="slide"

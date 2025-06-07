@@ -1,6 +1,6 @@
 export type PostData = {
   id: string,
-  created_at: Date,
+  created_at: string,
   image: string,
   caption: string,
   user: UserDataSimple

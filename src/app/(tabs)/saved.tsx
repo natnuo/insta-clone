@@ -1,21 +1,22 @@
-import { Redirect, useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
-import { Alert, useWindowDimensions } from "react-native";
 import { FlatList, GestureHandlerRootView } from "react-native-gesture-handler";
-import { Button, Text, View, XStack, YStack } from "tamagui";
-import PostSquare from "~/src/components/PostSquare";
-import { cld } from "~/src/lib/cloudinary";
-import { supabase } from "~/src/lib/supabase";
-import { PostData, UserDataSimple } from "~/src/lib/types";
-import { useAuth } from "~/src/providers/AuthProvider";
+import { Text, View, XStack, YStack } from "tamagui";
 import { thumbnail } from "@cloudinary/url-gen/actions/resize";
 import { FocusOn } from "@cloudinary/transformation-builder-sdk/qualifiers/focusOn";
 import { focusOn } from "@cloudinary/transformation-builder-sdk/qualifiers/gravity";
-import { AdvancedImage } from "cloudinary-react-native";
+import { cld } from "~/src/lib/cloudinary";
+import { useAuth } from "~/src/providers/AuthProvider";
+import { useCallback, useEffect, useState } from "react";
+import { Alert, useWindowDimensions } from "react-native";
 import { CloudinaryImage } from "@cloudinary/url-gen/index";
+import { PostData, UserDataSimple } from "~/src/lib/types";
+import { supabase } from "~/src/lib/supabase";
+import { AdvancedImage } from "cloudinary-react-native";
+import PostSquare from "~/src/components/PostSquare";
 
-export default function UserScreen() {
-  const { userId } = useLocalSearchParams();
+export default function SavedPostsScreen() {
+  const { session } = useAuth();
+  const userId = session?.user.id;
+
   const [loading, setLoading] = useState(false);
   const [posts, setPosts] = useState<PostData[]>();
 
@@ -87,12 +88,10 @@ export default function UserScreen() {
     setRefreshingPosts(false);
   }, [refreshingPosts]);
 
-  // TODO: PAGINATION HERE
-  // TODO: REFRESH
   return (
     <GestureHandlerRootView>
-      <YStack paddingVertical={50}>
-        <XStack padding={25} gap={10} marginBlock={20}>
+      <YStack>
+        <XStack padding={25} paddingBottom={15} gap={10} marginBlock={20}>
           {postAvatar && (
             <AdvancedImage
               cldImg={postAvatar}
@@ -109,6 +108,11 @@ export default function UserScreen() {
           </YStack>
         </XStack>
 
+        <View width={"90%"} opacity={0.3} borderTopWidth={1} margin={"auto"} marginBottom={25}></View>
+
+        <Text fontSize={16} margin={"auto"} marginBottom={8} fontWeight={"bold"}>
+          Saved Posts
+        </Text>
         <FlatList
           data={posts}
           numColumns={3}
