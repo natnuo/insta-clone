@@ -28,19 +28,21 @@ export default function ForYouScreen() {
   }, []);
 
   const [refreshing, setRefreshing] = useState(false);
+  const [refreshCnt, setRefreshCnt] = useState(0);
 
   const onRefresh = useCallback(async () => {
     if (refreshing) return;
     setRefreshing(true);
     await fetchPosts();
     setRefreshing(false);
+    setRefreshCnt(refreshCnt + 1);
   }, [refreshing]);
 
   return (
     <GestureHandlerRootView>
       <FlatList
         data={posts}
-        renderItem={({ item }) => <PostListItem post={item} onRefresh={onRefresh}></PostListItem>}
+        renderItem={({ item }) => <PostListItem post={item} onRefresh={onRefresh} refreshCnt={refreshCnt}></PostListItem>}
         contentContainerStyle={{
           gap: _GAP,
           maxWidth: _MAX_W,

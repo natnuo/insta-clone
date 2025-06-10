@@ -11,10 +11,12 @@ export default function PostSquare({
   post,
   sideLength,
   onRefresh,
+  refreshCnt
 }: {
   post: PostData;
   sideLength: number;
   onRefresh: () => void;
+  refreshCnt: number;
 }) {
   const [fullPostVisible, setFullPostVisible] = useState(false);
 
@@ -44,7 +46,7 @@ export default function PostSquare({
           keyboardVerticalOffset={60}
         >
           <View style={{ padding: 24, justifyContent: "space-between" }}>
-            <PostListItem post={post} onRefresh={onRefresh}></PostListItem>
+            <PostListItem post={post} onRefresh={onRefresh} refreshCnt={refreshCnt}></PostListItem>
           </View>
         </KeyboardAvoidingView>
       </Modal>

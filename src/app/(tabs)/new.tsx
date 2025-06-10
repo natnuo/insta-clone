@@ -2,6 +2,7 @@ import { widths } from "@tamagui/config";
 import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
+  Alert,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -26,26 +27,40 @@ export default function CreatePost() {
   const [caption, setCaption] = useState("");
   const [image, setImage] = useState<string>();
 
+  const [createPostLoading, setCreatePostLoading] = useState(false);
+
   const { session } = useAuth();
 
   const createPost = useCallback(async () => {
-    const response = await uploadImage(image);
+    if (createPostLoading) return;
+    setCreatePostLoading(true);
 
-    const { data, error } = await supabase
-      .from("posts")
-      .insert([
-        {
-          caption,
-          image: response?.public_id,
-          user_id: session?.user.id,
-        },
-      ])
-      .select();
+    try {
+      const response = await uploadImage(image);
 
-    router.push("/(tabs)");
+      const { error } = await supabase
+        .from("posts")
+        .insert([
+          {
+            caption,
+            image: response?.public_id,
+            user_id: session?.user.id,
+          },
+        ])
+        .select();
+      
+      if (error) {
+        Alert.alert("Something unexpected happened");
+        throw error;
+      }
 
-    setCaption("");
-  }, [image, caption]);
+      router.push("/(tabs)");
+
+      setCaption("");
+    } finally {
+      setCreatePostLoading(false);
+    }
+  }, [image, caption, createPostLoading]);
 
   return (
     <KeyboardAvoidingView
@@ -87,7 +102,7 @@ export default function CreatePost() {
 
           {/* Post button */}
           {image && (
-            <Button theme={"accent"} onPress={createPost}>
+            <Button theme={createPostLoading ? "" : "accent"} onPress={createPost} disabled={createPostLoading}>
               Share post
             </Button>
           )}

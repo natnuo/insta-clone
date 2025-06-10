@@ -1,5 +1,5 @@
-import { FlatList, GestureHandlerRootView } from "react-native-gesture-handler";
-import { Text, View, XStack, YStack } from "tamagui";
+import { FlatList, GestureHandlerRootView, RefreshControl } from "react-native-gesture-handler";
+import { ScrollView, Text, View, XStack, YStack } from "tamagui";
 import { thumbnail } from "@cloudinary/url-gen/actions/resize";
 import { FocusOn } from "@cloudinary/transformation-builder-sdk/qualifiers/focusOn";
 import { focusOn } from "@cloudinary/transformation-builder-sdk/qualifiers/gravity";
@@ -59,8 +59,8 @@ export default function SavedPostsScreen() {
       setLoading(true);
 
       const { data, error } = await supabase
-        .from("posts")
-        .select("*, user:profiles(*)")
+        .from("post_saves")
+        .select("*, post:posts(*, user:profiles(*))")
         .eq("user_id", userId);
 
       if (error || !data) {
@@ -68,7 +68,7 @@ export default function SavedPostsScreen() {
         throw error;
       }
 
-      setPosts(data);
+      setPosts(data.map(item => item.post));
     } finally {
       setLoading(false);
     }
@@ -79,6 +79,7 @@ export default function SavedPostsScreen() {
     fetchAvatar();
   }, []);
 
+  const [postRefreshCnt, setPostRefreshCnt] = useState(0);
   const [refreshingPosts, setRefreshingPosts] = useState(false);
 
   const onRefreshPosts = useCallback(async () => {
@@ -86,46 +87,66 @@ export default function SavedPostsScreen() {
     setRefreshingPosts(true);
     await fetchPosts();
     setRefreshingPosts(false);
+    setPostRefreshCnt(postRefreshCnt + 1);
   }, [refreshingPosts]);
+
+  const [refreshing, setRefreshing] = useState(false);
+  
+  const onRefresh = useCallback(async () => {
+    if (refreshing) return;
+    setRefreshing(true);
+    await fetchPosts();
+    await fetchAvatar();
+    setRefreshing(false);
+    setPostRefreshCnt(postRefreshCnt + 1);
+  }, [refreshing]);
 
   return (
     <GestureHandlerRootView>
-      <YStack>
-        <XStack padding={25} paddingBottom={15} gap={10} marginBlock={20}>
-          {postAvatar && (
-            <AdvancedImage
-              cldImg={postAvatar}
-              width={96}
-              style={{ aspectRatio: 1, backgroundColor: "black" }}
-              borderRadius={Number.MAX_SAFE_INTEGER}
-            ></AdvancedImage>
-          )}
-          <YStack gap={2}>
-            <Text fontWeight={"bold"} fontSize={24}>
-              {user?.username}
-            </Text>
-            <Text fontSize={16}>{user?.description}</Text>
-          </YStack>
-        </XStack>
+      <ScrollView
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        <YStack>
+          <XStack padding={25} paddingBottom={15} gap={10} marginBlock={20}>
+            {postAvatar && (
+              <AdvancedImage
+                cldImg={postAvatar}
+                width={96}
+                style={{ aspectRatio: 1, backgroundColor: "black" }}
+                borderRadius={Number.MAX_SAFE_INTEGER}
+              ></AdvancedImage>
+            )}
+            <YStack gap={2}>
+              <Text fontWeight={"bold"} fontSize={24}>
+                {user?.username}
+              </Text>
+              <Text fontSize={16}>{user?.description}</Text>
+            </YStack>
+          </XStack>
 
-        <View width={"90%"} opacity={0.3} borderTopWidth={1} margin={"auto"} marginBottom={25}></View>
+          <View width={"90%"} opacity={0.3} borderTopWidth={1} margin={"auto"} marginBottom={25}></View>
 
-        <Text fontSize={16} margin={"auto"} marginBottom={8} fontWeight={"bold"}>
-          Saved Posts
-        </Text>
-        <FlatList
-          data={posts}
-          numColumns={3}
-          keyExtractor={(post) => post.id}
-          renderItem={({ item }) => (
-            <PostSquare
-              post={item}
-              sideLength={width / 3}
-              onRefresh={onRefreshPosts}
-            ></PostSquare>
-          )}
-        ></FlatList>
-      </YStack>
+          <Text fontSize={16} margin={"auto"} marginBottom={8} fontWeight={"bold"}>
+            Saved Posts
+          </Text>
+          <FlatList
+            data={posts}
+            numColumns={3}
+            keyExtractor={(post) => post.id}
+            scrollEnabled={false}
+            renderItem={({ item }) => (
+              <PostSquare
+                post={item}
+                sideLength={width / 3}
+                onRefresh={onRefreshPosts}
+                refreshCnt={postRefreshCnt}
+              ></PostSquare>
+            )}
+          ></FlatList>
+        </YStack>
+      </ScrollView>
     </GestureHandlerRootView>
   );
 }

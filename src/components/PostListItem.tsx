@@ -1,4 +1,12 @@
-import { Button, Image, Text, useIsPresent, View, XStack, YStack } from "tamagui";
+import {
+  Button,
+  Image,
+  Text,
+  useIsPresent,
+  View,
+  XStack,
+  YStack,
+} from "tamagui";
 import posts from "~/assets/data/posts.json";
 import Feather from "@expo/vector-icons/Feather";
 import Entypo from "@expo/vector-icons/Entypo";
@@ -32,7 +40,15 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 
 const COMMENT_PAGINATION_LENGTH = 13;
 
-export default function PostListItem({ post, onRefresh }: { post: PostData, onRefresh: () => void }) {
+export default function PostListItem({
+  post,
+  onRefresh,
+  refreshCnt,
+}: {
+  post: PostData;
+  onRefresh: () => void;
+  refreshCnt: number;
+}) {
   const { width } = useWindowDimensions();
   const contWidth = Math.min(width, _MAX_W);
 
@@ -66,6 +82,8 @@ export default function PostListItem({ post, onRefresh }: { post: PostData, onRe
 
     if (count > 0) {
       setLiked(true);
+    } else {
+      setLiked(false);
     }
 
     setUncertainLikeStatus(false);
@@ -127,6 +145,8 @@ export default function PostListItem({ post, onRefresh }: { post: PostData, onRe
 
       if (count > 0) {
         setSaved(true);
+      } else {
+        setSaved(false);
       }
     } finally {
       setLoadingSaved(false);
@@ -134,7 +154,7 @@ export default function PostListItem({ post, onRefresh }: { post: PostData, onRe
   };
   const savePost = async () => {
     if (loadingSaved) return;
-    
+
     try {
       setLoadingSaved(true);
 
@@ -155,7 +175,7 @@ export default function PostListItem({ post, onRefresh }: { post: PostData, onRe
   };
   const unsavePost = async () => {
     if (loadingSaved) return;
-    
+
     try {
       setLoadingSaved(true);
 
@@ -177,7 +197,10 @@ export default function PostListItem({ post, onRefresh }: { post: PostData, onRe
   };
 
   const [comments, updateLoadedComments] = useReducer(
-    (state: CommentData[], [action, aComments]: ["add" | "set", CommentData[]]) => {
+    (
+      state: CommentData[],
+      [action, aComments]: ["add" | "set", CommentData[]]
+    ) => {
       if (action === "add") {
         state.push(...aComments);
       } else {
@@ -248,7 +271,7 @@ export default function PostListItem({ post, onRefresh }: { post: PostData, onRe
   useEffect(() => {
     fetchLiked();
     fetchSaved();
-  }, []);
+  }, [refreshCnt]);
 
   const [confirmDeleteVisible, setConfirmDeleteVisible] = useState(false);
 
@@ -259,13 +282,10 @@ export default function PostListItem({ post, onRefresh }: { post: PostData, onRe
     try {
       setLoadingDeletePost(true);
 
-      const {error} = await supabase
-        .from("posts")
-        .delete()
-        .eq("id", post.id);
-      
-        console.log(error, post.id);
-      
+      const { error } = await supabase.from("posts").delete().eq("id", post.id);
+
+      console.log(error, post.id);
+
       if (error) {
         Alert.alert("Something unexpected happened");
         throw error;
@@ -326,17 +346,9 @@ export default function PostListItem({ post, onRefresh }: { post: PostData, onRe
         />
 
         {saved ? (
-          <FontAwesome
-            name="bookmark"
-            size={24}
-            onPress={unsavePost}
-          />
+          <FontAwesome name="bookmark" size={24} onPress={unsavePost} />
         ) : (
-          <FontAwesome
-            name="bookmark-o"
-            size={24}
-            onPress={savePost}
-          />
+          <FontAwesome name="bookmark-o" size={24} onPress={savePost} />
         )}
       </XStack>
 
@@ -355,28 +367,28 @@ export default function PostListItem({ post, onRefresh }: { post: PostData, onRe
           alignContent="center"
           justifyContent="center"
         >
-          <Text>Posted by {post.user.username} at {(new Date(post.created_at)).toLocaleString()}</Text>
+          <Text>
+            Posted by {post.user.username} at{" "}
+            {new Date(post.created_at).toLocaleString()}
+          </Text>
           <AdvancedImage
             cldImg={image}
             style={{ aspectRatio: 1, width: "100%", backgroundColor: "black" }}
           ></AdvancedImage>
-          
+
           <Text>
             Are you sure you want to delete this post?
             <Text fontStyle="italic">This action is irreversible.</Text>
           </Text>
 
           <XStack display="flex" gap={12}>
-            <Button
-              flexGrow={1}
-              onPress={() => setConfirmDeleteVisible(false)}
-            >Cancel</Button>
+            <Button flexGrow={1} onPress={() => setConfirmDeleteVisible(false)}>
+              Cancel
+            </Button>
 
-            <Button
-              theme={"accent"}
-              flexGrow={1}
-              onPress={deletePost}
-            >Delete</Button>
+            <Button theme={"accent"} flexGrow={1} onPress={deletePost}>
+              Delete
+            </Button>
           </XStack>
         </YStack>
       </Modal>

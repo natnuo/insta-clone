@@ -25,10 +25,14 @@ export default function ProfileScreen() {
 
   const [loading, setLoading] = useState<boolean>(false);
 
-  const saveSettings = useCallback(async () => {
-    if (!username || !image || !session) return;
+  const [customUploaded, setCustomUploaded] = useState(false);
 
-    const response = await uploadImage(image);
+  const saveSettings = useCallback(async () => {
+    if (!username || !session) return;
+
+    let response = undefined;
+    if (customUploaded)
+      response = await uploadImage(image);
 
     setLoading(true);
 
@@ -36,7 +40,7 @@ export default function ProfileScreen() {
       const updates = {
         id: session.user.id,
         username,
-        avatar_url: response?.public_id,
+        avatar_url: response?.public_id ?? image,
         updated_at: new Date(),
       };
 
@@ -50,8 +54,6 @@ export default function ProfileScreen() {
       reloadAppAsync();
     }
   }, [username, image]);
-
-  const [customUploaded, setCustomUploaded] = useState(false);
 
   const [cldImage, setCldImage] = useState<CloudinaryImage>(
     cld.image("blank-image")

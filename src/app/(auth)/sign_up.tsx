@@ -42,6 +42,18 @@ export default function Auth() {
             if (!session) {
                 throw "Session Null";
             }
+
+            const {error: e2} = await supabase
+                .from("profiles")
+                .upsert({
+                    id: session?.user.id,
+                    username
+                });
+            
+            if (e2) {
+                Alert.alert(e2.message);
+                throw error;
+            }
             
             // if (!session)
             //     Alert.alert("Please check your inbox for email verification!");
