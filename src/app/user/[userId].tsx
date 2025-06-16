@@ -80,11 +80,14 @@ export default function UserScreen() {
 
   const [refreshingPosts, setRefreshingPosts] = useState(false);
 
+  const [refreshCnt, setRefreshCnt] = useState(0);
+
   const onRefreshPosts = useCallback(async () => {
     if (refreshingPosts) return;
     setRefreshingPosts(true);
     await fetchPosts();
     setRefreshingPosts(false);
+    setRefreshCnt(i => i+1);
   }, [refreshingPosts]);
 
   // TODO: PAGINATION HERE
@@ -118,6 +121,7 @@ export default function UserScreen() {
               post={item}
               sideLength={width / 3}
               onRefresh={onRefreshPosts}
+              refreshCnt={refreshCnt}
             ></PostSquare>
           )}
         ></FlatList>
