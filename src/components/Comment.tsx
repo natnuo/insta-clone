@@ -23,7 +23,7 @@ export default function Comment({ comment }: { comment: CommentData }) {
     <View flexDirection="row" gap={12} marginBottom={12}>
       <AdvancedImage
         cldImg={commentAvatar}
-        style={{ aspectRatio: 1, width: AVATAR_W }}
+        style={{ aspectRatio: 1, width: AVATAR_W, backgroundColor: "#000", borderRadius: 50 }}
       ></AdvancedImage>
       <View gap={4}>
         <Text fontWeight={"bold"}>{comment.user.username}</Text>

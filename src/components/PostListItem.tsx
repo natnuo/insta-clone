@@ -21,6 +21,7 @@ import {
   KeyboardAvoidingView,
   Modal,
   Platform,
+  Pressable,
   TextInput,
   TouchableHighlight,
   TouchableOpacity,
@@ -50,7 +51,7 @@ export default function PostListItem({
   refreshCnt: number;
 }) {
   const { width } = useWindowDimensions();
-  const contWidth = Math.min(width, _MAX_W);
+  const contWidth = Math.ceil(Math.min(width, _MAX_W));
 
   const image = cld.image(post.image);
   image.resize(thumbnail().width(contWidth).height(contWidth));
@@ -305,6 +306,7 @@ export default function PostListItem({
         <AdvancedImage
           cldImg={postAvatar}
           width={AVATAR_W}
+          src={postAvatar.toURL()}
           borderRadius={Number.MAX_SAFE_INTEGER}
           style={{ aspectRatio: 1, backgroundColor: "black" }}
         ></AdvancedImage>
@@ -319,10 +321,14 @@ export default function PostListItem({
       </XStack>
 
       {/* Image */}
-      <AdvancedImage
+      {/* <AdvancedImage
         cldImg={image}
+        src={image.toURL()}
         style={{ aspectRatio: 1, width: "100%", backgroundColor: "black" }}
-      ></AdvancedImage>
+      ></AdvancedImage> */}
+      <Image src={image.toURL()} style={{ aspectRatio: 1, width: "100%", backgroundColor: "black" }}>
+
+      </Image>
 
       {/* Caption */}
       <Text marginHorizontal={8} marginVertical={4}>
@@ -336,14 +342,19 @@ export default function PostListItem({
         ) : (
           <Entypo name="heart-outlined" size={24} onPress={like} />
         )}
-        <Feather name="message-circle" size={24} onPress={openComments} />
+        <Feather name="message-circle" className="mr-auto" size={24} onPress={openComments} />
 
-        <FontAwesome
-          name="trash-o"
-          size={24}
-          className="ml-auto mr-1"
-          onPress={() => setConfirmDeleteVisible(true)}
-        />
+
+        {
+          post.user.id === session?.user.id && (
+            <FontAwesome
+              name="trash-o"
+              size={24}
+              className="mr-1"
+              onPress={() => setConfirmDeleteVisible(true)}
+            />
+          )
+        }
 
         {saved ? (
           <FontAwesome name="bookmark" size={24} onPress={unsavePost} />
@@ -360,6 +371,11 @@ export default function PostListItem({
         visible={confirmDeleteVisible}
         onRequestClose={() => setConfirmDeleteVisible(false)}
       >
+        <Pressable className="absolute top-10 right-8 z-50" onPress={() => {
+          setConfirmDeleteVisible(false);
+        }}>
+          <FontAwesome name="close" color={"#000"} size={22} />
+        </Pressable>
         <YStack
           padding={24}
           gap={12}
@@ -377,7 +393,7 @@ export default function PostListItem({
           ></AdvancedImage>
 
           <Text>
-            Are you sure you want to delete this post?
+            Are you sure you want to delete this post?{" "}
             <Text fontStyle="italic">This action is irreversible.</Text>
           </Text>
 
@@ -408,6 +424,11 @@ export default function PostListItem({
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           keyboardVerticalOffset={60}
         >
+          <Pressable className="absolute top-10 right-8 z-50" onPress={() => {
+            setCommentsVisible(false);
+          }}>
+            <FontAwesome name="close" color={"#000"} size={22} />
+          </Pressable>
           <View style={{ padding: 24, justifyContent: "space-between" }}>
             <View height={"85%"}>
               <FlatList
@@ -433,12 +454,13 @@ export default function PostListItem({
                 value={commentInput}
                 onChangeText={setCommentInput}
                 style={{
-                  lineHeight: 0,
+                  lineHeight: 12,
                   padding: 12,
                   borderWidth: 1,
                   borderColor: "lightgray",
                   borderRadius: 12,
                   flex: 1,
+                  color: "#000"
                 }}
               ></TextInput>
               <AntDesign

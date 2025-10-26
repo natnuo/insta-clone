@@ -139,7 +139,7 @@ export default function SavedPostsScreen() {
             renderItem={({ item }) => (
               <PostSquare
                 post={item}
-                sideLength={width / 3}
+                sideLength={Math.ceil(width / 3)}
                 onRefresh={onRefreshPosts}
                 refreshCnt={postRefreshCnt}
               ></PostSquare>

@@ -3,8 +3,9 @@ import { PostData } from "../lib/types";
 import { cld } from "../lib/cloudinary";
 import { thumbnail } from "@cloudinary/url-gen/actions/resize";
 import { AdvancedImage } from "cloudinary-react-native";
-import { KeyboardAvoidingView, Modal, Platform } from "react-native";
-import { useState } from "react";
+import { KeyboardAvoidingView, Modal, Platform, Pressable } from "react-native";
+import { useEffect, useState } from "react";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 import PostListItem from "./PostListItem";
 
 export default function PostSquare({
@@ -45,6 +46,11 @@ export default function PostSquare({
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           keyboardVerticalOffset={60}
         >
+          <Pressable className="absolute top-10 right-8 z-50" onPress={() => {
+            setFullPostVisible(false);
+          }}>
+            <FontAwesome name="close" color={"#000"} size={22} />
+          </Pressable>
           <View style={{ padding: 24, justifyContent: "space-between" }}>
             <PostListItem post={post} onRefresh={onRefresh} refreshCnt={refreshCnt}></PostListItem>
           </View>
